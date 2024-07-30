@@ -1,5 +1,5 @@
 ﻿#include "../exercise.h"
-
+#include "cstring"
 // READ: 类模板 <https://zh.cppreference.com/w/cpp/language/class_template>
 
 template<class T>
@@ -8,8 +8,9 @@ struct Tensor4D {
     T *data;
 
     Tensor4D(unsigned int const shape_[4], T const *data_) {
-        unsigned int size = 1;
+        unsigned int size = shape_[0] * shape_[1] * shape_[2] * shape_[3];
         // TODO: 填入正确的 shape 并计算 size
+        std::memcpy(shape, shape_, 4 * sizeof(int));
         data = new T[size];
         std::memcpy(data, data_, size * sizeof(T));
     }
@@ -27,6 +28,34 @@ struct Tensor4D {
     // 例如，`this` 形状为 `[1, 2, 3, 4]`，`others` 形状为 `[1, 2, 1, 4]`，
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
+        int pos = 0;
+        while(pos < 4 && shape[pos] == others.shape[pos]) ++pos;
+        // if(pos >= 4 or others.shape[pos] != 1) assert
+        // for(int i = pos + 1,i < 3; ++i) if(others.shape[i] != 1) assert
+        // [1,2,3,4] [1,1,3,1]
+        if(pos == 4){
+            unsigned int size = shape[0] * shape[1] * shape[2] * shape[3];
+            for(unsigned int i = 0;i<size;++i) data[i] += others.data[i];
+            return *this;
+        }
+
+        int suffix_s[5] = {1,1,1,1,1}, suffix_t[5] = {1,1,1,1,1}, tot = 1;
+        for(int i = 3;i>=0;--i) {
+            suffix_s[i] = suffix_s[i+1] * shape[i];
+            suffix_t[i] = suffix_t[i+1] * others.shape[i];
+        }
+        for(int i = 0;i<pos;++i) tot *= shape[i];
+        
+        for(int i = 0;i<tot;++i){
+            int offset_s = i * suffix_s[pos], offset_t = i * suffix_t[pos];
+            // std::cout<<offset_s<<std::endl;
+            // std::cout<<offset_t<<std::endl;
+            for(unsigned int j = 0;j<shape[pos];++j){
+                for(int k = 0;k<suffix_s[pos+1];++k){
+                    data[offset_s + j * suffix_s[pos+1] + k] += others.data[offset_t + k];
+                }
+            }
+        }
         // TODO: 实现单向广播的加法
         return *this;
     }
@@ -102,6 +131,10 @@ int main(int argc, char **argv) {
         auto t0 = Tensor4D(s0, d0);
         auto t1 = Tensor4D(s1, d1);
         t0 += t1;
+                // for(int i =0;i<24;++i){
+        //     std::cout<<t0.data[i]<<((i+1)%4==0?'\n':' ');
+        // }
+        // return 0;
         for (auto i = 0u; i < sizeof(d0) / sizeof(*d0); ++i) {
             ASSERT(t0.data[i] == d0[i] + 1, "Every element of t0 should be incremented by 1 after adding t1 to it.");
         }

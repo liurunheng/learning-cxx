@@ -22,7 +22,7 @@ public:
           cached(2) {
     }
     // TODO: 实现移动构造器
-<<<<<<< HEAD
+
     DynFibonacci(DynFibonacci &&other)
         : cache(std::exchange(other.cache, nullptr)),
         cached(std::exchange(other.cached, 0)) {
@@ -32,13 +32,7 @@ public:
     // NOTICE: ⚠ 注意移动到自身问题 ⚠
     DynFibonacci &operator=(DynFibonacci &&other){
         if (this == &other) return *this;
-=======
-    DynFibonacci(DynFibonacci &&) noexcept = delete;
 
-    // TODO: 实现移动赋值
-    // NOTICE: ⚠ 注意移动到自身问题 ⚠
-    DynFibonacci &operator=(DynFibonacci &&) noexcept = delete;
->>>>>>> refs/remotes/origin/main
 
         delete [] cache;
         cache = other.cache;
@@ -65,10 +59,6 @@ public:
         ASSERT(i <= cached, "i out of range");
         return cache[i];
     }
-<<<<<<< HEAD
-    
-=======
->>>>>>> refs/remotes/origin/main
 
     // NOTICE: 不要修改这个方法
     bool is_alive() const {
